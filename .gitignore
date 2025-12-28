@@ -49,6 +49,9 @@ data/scenarios/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/scenarios/.gitkeep
+!data/scenarios/*.yaml
+!data/scenarios/*.yml
+!data/scenarios/*.json
 
 # Results
 results/simulations/*

@@ -1,0 +1,14 @@
+name: baseline
+description: Baseline scenario with current system (fossil heavy)
+year: 2025
+region: global
+parameters:
+  renewable_penetration: 0.3
+  storage_capacity_gw: 10.0
+  transmission_expansion: false
+  demand_growth: 0.0
+renewable_penetration: 0.3
+storage_capacity_gw: 10.0
+transmission_expansion: false
+demand_growth: 0.0
+

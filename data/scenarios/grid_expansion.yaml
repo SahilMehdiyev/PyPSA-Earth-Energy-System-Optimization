@@ -1,0 +1,14 @@
+name: grid_expansion
+description: Enhanced transmission network scenario
+year: 2030
+region: global
+parameters:
+  renewable_penetration: 0.7
+  storage_capacity_gw: 30.0
+  transmission_expansion: true
+  demand_growth: 0.15
+renewable_penetration: 0.7
+storage_capacity_gw: 30.0
+transmission_expansion: true
+demand_growth: 0.15
+

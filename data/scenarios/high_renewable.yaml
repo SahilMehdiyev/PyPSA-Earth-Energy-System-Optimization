@@ -1,0 +1,14 @@
+name: high_renewable
+description: High renewable penetration scenario (80%+)
+year: 2030
+region: global
+parameters:
+  renewable_penetration: 0.8
+  storage_capacity_gw: 50.0
+  transmission_expansion: true
+  demand_growth: 0.2
+renewable_penetration: 0.8
+storage_capacity_gw: 50.0
+transmission_expansion: true
+demand_growth: 0.2
+

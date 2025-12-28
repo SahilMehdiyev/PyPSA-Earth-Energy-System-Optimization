@@ -1,0 +1,14 @@
+name: storage_heavy
+description: Massive battery/hydrogen deployment scenario
+year: 2035
+region: global
+parameters:
+  renewable_penetration: 0.6
+  storage_capacity_gw: 200.0
+  transmission_expansion: false
+  demand_growth: 0.3
+renewable_penetration: 0.6
+storage_capacity_gw: 200.0
+transmission_expansion: false
+demand_growth: 0.3
+
