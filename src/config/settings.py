@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 class SolverSettings(BaseModel):
     """Solver configuration settings."""
 
-    name: str = Field(default="gurobi", description="Solver name (gurobi, cbc, glpk)")
+    name: str = Field(default="highs", description="Solver name (highs, gurobi, cbc, glpk)")
     timeout: Optional[int] = Field(default=None, description="Solver timeout in seconds")
     threads: Optional[int] = Field(default=None, description="Number of threads")
     mip_gap: float = Field(default=0.01, description="MIP gap tolerance")
@@ -19,7 +19,7 @@ class SolverSettings(BaseModel):
     @classmethod
     def validate_solver_name(cls, v: str) -> str:
         """Validate solver name."""
-        valid_solvers = ["gurobi", "cbc", "glpk"]
+        valid_solvers = ["highs", "gurobi", "cbc", "glpk"]
         if v.lower() not in valid_solvers:
             raise ValueError(f"Solver must be one of {valid_solvers}")
         return v.lower()

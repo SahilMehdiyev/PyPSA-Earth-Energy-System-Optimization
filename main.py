@@ -178,7 +178,7 @@ def main() -> None:
     opt_parser = subparsers.add_parser("optimize", help="Run optimization")
     opt_parser.add_argument("--method", type=str, choices=["lp", "ga"], default="lp", help="Optimization method")
     opt_parser.add_argument("--objective", type=str, choices=["cost", "emissions", "multi"], default="cost", help="Objective function")
-    opt_parser.add_argument("--solver", type=str, choices=["gurobi", "cbc", "glpk"], default="gurobi", help="LP solver")
+    opt_parser.add_argument("--solver", type=str, choices=["highs", "gurobi", "cbc", "glpk"], default="highs", help="LP solver")
     opt_parser.add_argument("--generations", type=int, default=100, help="GA generations")
     opt_parser.add_argument("--population", type=int, default=200, help="GA population size")
     opt_parser.add_argument("--output", type=str, help="Output directory path")

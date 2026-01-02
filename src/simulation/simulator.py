@@ -89,7 +89,8 @@ class Simulator:
         # Create time index
         start_date = f"{scenario.year}-01-01"
         end_date = f"{scenario.year}-12-31"
-        snapshots = pd.date_range(start_date, end_date, freq=self.settings.simulation.timestep)
+        timestep = self.settings.simulation.timestep.replace('H', 'h')
+        snapshots = pd.date_range(start_date, end_date, freq=timestep)
         
         system = EnergySystem(name=scenario.name, snapshots=snapshots)
         

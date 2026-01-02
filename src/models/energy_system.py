@@ -44,6 +44,12 @@ class EnergySystem:
             # Default: one year of hourly data
             self.network.set_snapshots(pd.date_range("2025-01-01", "2025-12-31", freq=freq))
         
+        if not hasattr(self.network, "carriers") or len(self.network.carriers) == 0:
+            self.network.add("Carrier", "AC")
+            self.network.add("Carrier", "renewable")
+            self.network.add("Carrier", "conventional")
+            self.network.add("Carrier", "battery")
+        
         self.generation_units: Dict[str, GenerationUnit] = {}
         self.transmission_lines: Dict[str, TransmissionLine] = {}
         self.storage_systems: Dict[str, StorageSystem] = {}
@@ -64,7 +70,7 @@ class EnergySystem:
         
         # Create bus if it doesn't exist
         if unit.node not in self.network.buses.index:
-            self.network.add("Bus", unit.node)
+            self.network.add("Bus", unit.node, carrier="AC")
         
         # Add generator
         self.network.add(
@@ -96,9 +102,9 @@ class EnergySystem:
         
         # Create buses if they don't exist
         if line.from_node not in self.network.buses.index:
-            self.network.add("Bus", line.from_node)
+            self.network.add("Bus", line.from_node, carrier="AC")
         if line.to_node not in self.network.buses.index:
-            self.network.add("Bus", line.to_node)
+            self.network.add("Bus", line.to_node, carrier="AC")
         
         # Add link (for DC) or line (for AC)
         if line.line_type.value == "dc":
@@ -134,7 +140,7 @@ class EnergySystem:
             storage.node = f"node_{len(self.network.buses)}"
         
         if storage.node not in self.network.buses.index:
-            self.network.add("Bus", storage.node)
+            self.network.add("Bus", storage.node, carrier="AC")
         
         # Add store (energy capacity)
         self.network.add(
@@ -145,6 +151,7 @@ class EnergySystem:
             e_min_pu=storage.min_state_of_charge,
             e_max_pu=storage.max_state_of_charge,
             standing_loss=storage.standing_loss_per_hour,
+            carrier="battery",
         )
         
         # Add store link (charge/discharge)
@@ -155,6 +162,7 @@ class EnergySystem:
             bus1=storage.node,
             p_nom=storage.power_capacity_mw,
             efficiency=storage.charge_efficiency,
+            carrier="battery",
         )
         
         self.network.add(
@@ -164,6 +172,7 @@ class EnergySystem:
             bus1=storage.node,
             p_nom=storage.power_capacity_mw,
             efficiency=storage.discharge_efficiency,
+            carrier="battery",
         )
         
         logger.debug(f"Added storage system '{storage.name}' ({storage.storage_type.value})")
@@ -177,7 +186,7 @@ class EnergySystem:
         
         # Create bus if it doesn't exist
         if profile.node not in self.network.buses.index:
-            self.network.add("Bus", profile.node)
+            self.network.add("Bus", profile.node, carrier="AC")
         
         # Generate demand profile
         demand_series = profile.generate_profile(self.network.snapshots)
@@ -276,21 +285,31 @@ class EnergySystem:
         
         try:
             self.network.optimize.create_model()
-            self.network.optimize.solve_model(solver_name=solver_name, **solver_options)
+            # Remove timeout option for Highs solver (not supported)
+            solver_opts = solver_options.copy()
+            if solver_name == "highs" and "timeout" in solver_opts:
+                solver_opts.pop("timeout")
+            status, condition = self.network.optimize.solve_model(solver_name=solver_name, **solver_opts)
             
-            status = self.network.optimize.status
-            objective = self.network.objective
+            objective = getattr(self.network, "objective", None)
+            if objective is None:
+                model = self.network.optimize.model
+                if hasattr(model, "objective"):
+                    objective = float(model.objective.value) if hasattr(model.objective, "value") else 0.0
+                else:
+                    objective = 0.0
             
             results = {
                 "status": status,
+                "condition": condition,
                 "objective": objective,
-                "optimal": status == "ok",
+                "optimal": status == "ok" and condition == "optimal",
             }
             
-            if status == "ok":
+            if results["optimal"]:
                 logger.info(f"Optimization successful. Objective: {objective:.2f}")
             else:
-                logger.warning(f"Optimization status: {status}")
+                logger.warning(f"Optimization status: {status}, condition: {condition}")
             
             return results
         
@@ -303,9 +322,19 @@ class EnergySystem:
         if not hasattr(self.network, "objective") or self.network.objective is None:
             return {"status": "not_solved"}
         
+        status = "unknown"
+        if hasattr(self.network, "optimize") and hasattr(self.network.optimize, "model"):
+            model = self.network.optimize.model
+            if hasattr(model, "status"):
+                status = str(model.status)
+        
+        objective = getattr(self.network, "objective", None)
+        if objective is None:
+            objective = 0.0
+        
         summary = {
-            "status": self.network.optimize.status,
-            "objective": float(self.network.objective),
+            "status": status,
+            "objective": float(objective),
             "total_generation_mwh": float(
                 self.network.generators_t.p.sum().sum()
             ) if hasattr(self.network, "generators_t") else 0.0,
